@@ -1,6 +1,6 @@
 
 import React, { useContext, useEffect, useState } from 'react';
-import { AuthContext, supabase } from '@/App';
+import { AuthContext } from '@/App';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { FileCheck, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);

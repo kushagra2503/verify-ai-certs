@@ -23,10 +23,10 @@ export async function verifyCertificate(certificateId: string) {
     return {
       isVerified: true,
       certificate: {
-        id: data.cert_id,
-        name: data.name,
-        issueDate: new Date(data.issue_date).toLocaleDateString(),
-        expiryDate: data.expiry_date ? new Date(data.expiry_date).toLocaleDateString() : undefined
+        id: data?.cert_id,
+        name: data?.name,
+        issueDate: data?.issue_date ? new Date(data.issue_date).toLocaleDateString() : undefined,
+        expiryDate: data?.expiry_date ? new Date(data.expiry_date).toLocaleDateString() : undefined
       }
     };
   } catch (error) {
@@ -91,7 +91,7 @@ export async function uploadCertificate({
       success: true,
       message: 'Certificate uploaded successfully'
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Certificate upload error:', error);
     throw error;
   }

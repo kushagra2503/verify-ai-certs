@@ -1,3 +1,4 @@
+
 import React, { useState, useContext } from 'react';
 import { Upload, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { supabase } from '@/App';
+import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from '@/App';
 import { v4 as uuidv4 } from 'uuid';
 import { analyzeWithGemini } from '@/lib/verification';

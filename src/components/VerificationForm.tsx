@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { supabase } from '@/App';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Certificate {
   id: string;
