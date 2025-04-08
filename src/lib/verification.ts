@@ -1,5 +1,5 @@
 
-import { supabase } from '../App';
+import { supabase } from '@/integrations/supabase/client';
 
 // Function to verify certificate by ID
 export async function verifyCertificate(certificateId: string) {
@@ -50,7 +50,7 @@ export async function uploadCertificate({
   file: File;
 }) {
   try {
-    const user = supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('You must be logged in to upload certificates');
     }
@@ -80,7 +80,8 @@ export async function uploadCertificate({
           cert_id: id,
           name,
           issue_date: issueDate,
-          expiry_date: expiryDate
+          expiry_date: expiryDate,
+          user_id: user.id
         }
       ]);
     
@@ -104,12 +105,12 @@ export async function analyzeWithGemini(file: File) {
     
     // Call the Supabase Edge Function with the provided API key
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-certificate`,
+      `https://dntmjzqofaxkagvnitav.supabase.co/functions/v1/analyze-certificate`,
       {
         method: 'POST',
         body: formData,
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRudG1qenFvZmF4a2Fndm5pdGF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwOTc5MzUsImV4cCI6MjA1OTY3MzkzNX0.A3DII2XxQCXoHv9Ax5j4fsygppmdg5IZ1Aon18Kft2M`
         }
       }
     );
@@ -128,7 +129,7 @@ export async function analyzeWithGemini(file: File) {
         issueDate: result.certificate.issue_date || new Date().toISOString().split('T')[0]
       }
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('AI analysis error:', error);
     return {
       success: false,
