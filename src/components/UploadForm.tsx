@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import { Upload, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/App';
 import { AuthContext } from '@/App';
 import { v4 as uuidv4 } from 'uuid';
+import { analyzeWithGemini } from '@/lib/verification';
 
 const UploadForm = () => {
   const { user } = useContext(AuthContext);
@@ -21,36 +21,36 @@ const UploadForm = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<any>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
       if (!certificateId) {
         // If no ID is set, suggest a unique ID
         setCertificateId(`CERT-${uuidv4().substring(0, 8).toUpperCase()}`);
       }
       
-      // If we have a file, we can analyze it with Gemini (simulate for now)
-      analyzeWithGemini(e.target.files[0]);
+      // Use the actual Gemini analysis function
+      await processFileWithGemini(selectedFile);
     }
   };
 
-  // Simulate Gemini analysis while we wait for the Edge Function to be deployed
-  const analyzeWithGemini = async (file: File) => {
+  // Using the real Gemini analysis function instead of a simulation
+  const processFileWithGemini = async (fileToProcess: File) => {
     setIsAnalyzing(true);
     try {
-      // In a real implementation, this would call the Supabase Edge Function
-      // that would then call the Gemini API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simulated response
-      setAiSuggestions({
-        name: file.name.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
-        id: `CERT-${Math.floor(10000 + Math.random() * 90000)}`,
-        issueDate: new Date().toISOString().split('T')[0]
-      });
-      
-      toast.success("AI analysis complete! Suggestions available.");
-    } catch (error) {
+      const result = await analyzeWithGemini(fileToProcess);
+      if (result.success) {
+        setAiSuggestions({
+          name: result.extractedData.name,
+          id: result.extractedData.id,
+          issueDate: result.extractedData.issueDate
+        });
+        toast.success("AI analysis complete! Suggestions available.");
+      } else {
+        toast.error(result.error || "Failed to analyze certificate with AI");
+      }
+    } catch (error: any) {
       console.error("Error analyzing with Gemini:", error);
       toast.error("Failed to analyze certificate with AI");
     } finally {

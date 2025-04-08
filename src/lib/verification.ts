@@ -102,7 +102,7 @@ export async function analyzeWithGemini(file: File) {
     const formData = new FormData();
     formData.append('file', file);
     
-    // Call the Supabase Edge Function
+    // Call the Supabase Edge Function with the provided API key
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-certificate`,
       {
