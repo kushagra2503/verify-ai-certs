@@ -5,19 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { verifyCertificate } from '@/lib/verification';
+import { supabase } from '@/App';
+
+interface Certificate {
+  id: string;
+  cert_id: string;
+  name: string;
+  issue_date: string;
+  expiry_date?: string;
+  file_url?: string;
+}
 
 const VerificationForm = () => {
   const [certificateId, setCertificateId] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [result, setResult] = useState<{
     isVerified: boolean;
-    certificate?: {
-      id: string;
-      name: string;
-      issueDate: string;
-      expiryDate?: string;
-    };
+    certificate?: Certificate;
   } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,13 +36,37 @@ const VerificationForm = () => {
     setResult(null);
     
     try {
-      const verificationResult = await verifyCertificate(certificateId);
-      setResult(verificationResult);
-      
-      if (verificationResult.isVerified) {
+      // Query the database for the certificate
+      const { data, error } = await supabase
+        .from('certificates')
+        .select('*')
+        .eq('cert_id', certificateId.trim())
+        .single();
+        
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No certificate found
+          setResult({
+            isVerified: false
+          });
+          toast.error('Certificate verification failed');
+        } else {
+          throw error;
+        }
+      } else if (data) {
+        // Certificate found
+        setResult({
+          isVerified: true,
+          certificate: {
+            id: data.id,
+            cert_id: data.cert_id,
+            name: data.name,
+            issue_date: data.issue_date,
+            expiry_date: data.expiry_date,
+            file_url: data.file_url
+          }
+        });
         toast.success('Certificate verified successfully!');
-      } else {
-        toast.error('Certificate verification failed');
       }
     } catch (error) {
       console.error('Verification error:', error);
@@ -93,16 +121,25 @@ const VerificationForm = () => {
                   <p className="text-gray-500">Name:</p>
                   <p className="font-medium">{result.certificate?.name}</p>
                   <p className="text-gray-500">Certificate ID:</p>
-                  <p className="font-medium">{result.certificate?.id}</p>
+                  <p className="font-medium">{result.certificate?.cert_id}</p>
                   <p className="text-gray-500">Issue Date:</p>
-                  <p className="font-medium">{result.certificate?.issueDate}</p>
-                  {result.certificate?.expiryDate && (
+                  <p className="font-medium">{new Date(result.certificate?.issue_date || '').toLocaleDateString()}</p>
+                  {result.certificate?.expiry_date && (
                     <>
                       <p className="text-gray-500">Expiry Date:</p>
-                      <p className="font-medium">{result.certificate?.expiryDate}</p>
+                      <p className="font-medium">{new Date(result.certificate?.expiry_date).toLocaleDateString()}</p>
                     </>
                   )}
                 </div>
+                {result.certificate?.file_url && (
+                  <div className="mt-4">
+                    <Button variant="outline" asChild>
+                      <a href={result.certificate.file_url} target="_blank" rel="noopener noreferrer">
+                        View Certificate
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-2">
